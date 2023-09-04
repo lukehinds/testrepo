@@ -17,7 +17,7 @@ jobs:
       run: echo "$GITHUB_CONTEXT"
 
     - name: PR Size Labeler
-      uses: lukehinds/label-pr-size@v0.0.7
+      uses: lukehinds/label-pr-size@v0.0.8
       env:
         BASE_SHA: ${{ github.event.pull_request.base.sha }}
         HEAD_SHA: ${{ github.event.pull_request.head.sha }}
