@@ -1,0 +1,17 @@
+name: PR Size Labeler
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  labeler:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: PR Size Labeler
+      uses: lukehinds/pr-size-labeler@v1.0.0
+      with:
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
