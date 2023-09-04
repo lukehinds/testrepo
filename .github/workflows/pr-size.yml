@@ -11,8 +11,13 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
+    - name: Dump GitHub context
+      env:
+        GITHUB_CONTEXT: ${{ toJson(github) }}
+      run: echo "$GITHUB_CONTEXT"
+
     - name: PR Size Labeler
-      uses: lukehinds/label-pr-size@v0.0.4
+      uses: lukehinds/label-pr-size@v0.0.5
       with:
         repo-token: ${{ secrets.GITHUB_TOKEN }}
         base-sha: ${{ github.event.pull_request.base.sha }}
