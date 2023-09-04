@@ -18,9 +18,10 @@ jobs:
 
     - name: PR Size Labeler
       uses: lukehinds/label-pr-size@v0.0.5
+      env:
+        BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        HEAD_SHA: ${{ github.event.pull_request.head.sha }}
       with:
         repo-token: ${{ secrets.GITHUB_TOKEN }}
-        base-sha: ${{ github.event.pull_request.base.sha }}
-        head-sha: ${{ github.event.pull_request.head.sha }}
         repository: ${{ github.repository }}
         pr-number: ${{ github.event.pull_request.number }}
