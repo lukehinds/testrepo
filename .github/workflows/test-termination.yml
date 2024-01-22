@@ -1,0 +1,17 @@
+name: Check GITHUB_ENV
+
+on:
+  workflow_dispatch:
+jobs:
+  check_github_env:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check if GITHUB_ENV has a terminating newline
+      run: |
+        LAST_CHAR=$(tail -c 1 $GITHUB_ENV | od -An -tx1 | awk '{print $1}')
+        if [ $LAST_CHAR -eq 10 ]; then
+          echo "GITHUB_ENV has a terminating newline character."
+        else
+          echo "GITHUB_ENV does not have a terminating newline character."
+        fi
