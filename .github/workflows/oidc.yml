@@ -4,37 +4,51 @@ on:
   workflow_dispatch:  # Allows manual trigger from GitHub UI
 
 jobs:
-  interact-with-api:
+  example_job:
     runs-on: ubuntu-latest
     permissions:
       id-token: write
       contents: read
-
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-    
-      - name: Get OIDC token and use it
-        run: |
-          # Make sure that the ACTIONS_ID_TOKEN_REQUEST_URL is a complete URL
-          echo "URL: ${{ secrets.ACTIONS_ID_TOKEN_REQUEST_URL }}"  # Debug: print the URL to check if it's correct
-      
-          # Request the OIDC token
-          OIDC_TOKEN=$(curl -H "Authorization: bearer ${{ secrets.ACTIONS_ID_TOKEN_REQUEST_TOKEN }}" \
-                               -H "Accept: application/json; api-version=2.0" \
-                               "${{ secrets.ACTIONS_ID_TOKEN_REQUEST_URL }}&audience=api://your-api" | jq -r '.value')
-          
-          echo "OIDC_TOKEN=${OIDC_TOKEN}" >> $GITHUB_ENV
-          echo "::add-mask::${OIDC_TOKEN}"
-          
-          # Debug: Print the length of the token to verify it's not empty
-          echo "Token length: ${#OIDC_TOKEN}"  # This will show the length of the token
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-              # Use the OIDC_TOKEN for a POST request
-          RESPONSE=$(curl -X POST -H "Authorization: Bearer ${OIDC_TOKEN}" \
-                                  -H "Content-Type: application/json" \
-                                  -d '{"message": "Hello from GitHub Actions!"}' \
-                                  "https://charming-termite-surely.ngrok-free.app")
-          echo "Response from API: $RESPONSE"
+    - name: Get JWT from GitHub
+      shell: sh
+      run: |
+        i=1
+        while [ "${i}" -le 5 ]; do
+          JWT_TOKEN=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+                           -H "Accept: application/json; api-version=2.0" \
+                           "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=YOUR_AUDIENCE" | jq -r '.value')
+          if [ -n "$JWT_TOKEN" ] && [ "$JWT_TOKEN" != "null" ]; then
+            echo "::add-mask::$JWT_TOKEN"
+            echo "JWT_TOKEN=$JWT_TOKEN" >> "$GITHUB_ENV"
+            break
+          else
+            echo "Attempt $i failed. Retrying in 15 seconds..."
+            sleep 15
+          fi
+          i=$((i + 1))
+        done
+
+    - name: Check that token isn't empty
+      shell: sh
+      run: |
+        if [ -z "${JWT_TOKEN}" ]; then
+            echo "Error: JWT_TOKEN is empty! Ensure 'id-token: write' is set in permissions."
+            exit 1
+        else
+            echo "JWT Token successfully retrieved and stored."
+        fi
+
+    - name: Post to API with JWT Token
+      shell: sh
+      run: |
+        RESPONSE=$(curl -X POST -H "Authorization: Bearer ${JWT_TOKEN}" \
+                                -H "Content-Type: application/json" \
+                                -d '{"message": "Hello from GitHub Actions!"}' \
+                                "https://charming-termite-surely.ngrok-free.app")
+        echo "Response from API: $RESPONSE"
+
       
