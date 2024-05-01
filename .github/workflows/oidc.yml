@@ -12,19 +12,24 @@ jobs:
 
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
-  
-    - name: Get OIDC token and use it
-      run: |
-        OIDC_TOKEN=$(curl -H "Authorization: bearer ${{ secrets.ACTIONS_ID_TOKEN_REQUEST_TOKEN }}" \
-                           -H "Accept: application/json; api-version=2.0" \
-                           "${{ secrets.ACTIONS_ID_TOKEN_REQUEST_URL }}&audience=YOUR_AUDIENCE" | jq -r '.value')
-        echo "OIDC_TOKEN=${OIDC_TOKEN}" >> $GITHUB_ENV
-        echo "::add-mask::${OIDC_TOKEN}"
-        
-        # Use the OIDC_TOKEN for subsequent POST request
-        curl -X POST -H "Authorization: Bearer ${OIDC_TOKEN}" \
-             -H "Content-Type: application/json" \
-             -d '{"message": "Hello from GitHub Actions!"}' \
-             "https://charming-termite-surely.ngrok-free.app"
+      - name: Checkout code
+        uses: actions/checkout@v3
+    
+      - name: Get OIDC token and use it
+        run: |
+          # Ensure that the base URL and the audience parameter are correctly formatted.
+          # Replace YOUR_AUDIENCE with the actual audience intended for the token.
+          OIDC_TOKEN=$(curl -H "Authorization: bearer ${{ secrets.ACTIONS_ID_TOKEN_REQUEST_TOKEN }}" \
+                             -H "Accept: application/json; api-version=2.0" \
+                             "${{ secrets.ACTIONS_ID_TOKEN_REQUEST_URL }}?audience=YOUR_AUDIENCE" | jq -r '.value')
+          
+          echo "OIDC_TOKEN=${OIDC_TOKEN}" >> $GITHUB_ENV
+          echo "::add-mask::${OIDC_TOKEN}"
+          
+          # Ensure the OIDC token is used in subsequent requests
+          # Replace the URL below with the actual URL of your API
+          RESPONSE=$(curl -X POST -H "Authorization: Bearer ${OIDC_TOKEN}" \
+                              -H "Content-Type: application/json" \
+                              -d '{"message": "Hello from GitHub Actions!"}' \
+                              "https://charming-termite-surely.ngrok-free.app")
+          echo "Response from API: $RESPONSE"
