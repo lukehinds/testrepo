@@ -9,33 +9,25 @@ jobs:
     permissions:
       id-token: write
       contents: read
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
 
     - name: Get JWT from GitHub
-      shell: sh
+      shell: bash
       run: |
-        i=1
-        while [ "${i}" -le 5 ]; do
-          JWT_TOKEN=$(curl -s -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
-                           -H "Accept: application/json; api-version=2.0" \
-                           "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=YOUR_AUDIENCE" | jq -r '.value')
-          if [ -n "$JWT_TOKEN" ] && [ "$JWT_TOKEN" != "null" ]; then
-            echo "::add-mask::$JWT_TOKEN"
-            echo "JWT_TOKEN=$JWT_TOKEN" >> "$GITHUB_ENV"
-            break
-          else
-            echo "Attempt $i failed. Retrying in 15 seconds..."
-            sleep 15
-          fi
-          i=$((i + 1))
-        done
+        JWT_TOKEN=$(curl -s -H "Authorization: bearer ${{ github.token }}" \
+                            -H "Accept: application/json;api-version=2.0" \
+                            "${{ github.api_url }}/actions/oidc/token" \
+                            -d '{"audience":"api://trusty"}' | jq -r '.value')
+        echo "JWT_TOKEN=$JWT_TOKEN" >> $GITHUB_ENV
+        echo "::add-mask::$JWT_TOKEN"
 
     - name: Check that token isn't empty
-      shell: sh
+      shell: bash
       run: |
-        if [ -z "${JWT_TOKEN}" ]; then
+        if [ -z "${{ env.JWT_TOKEN }}" ]; then
             echo "Error: JWT_TOKEN is empty! Ensure 'id-token: write' is set in permissions."
             exit 1
         else
@@ -43,12 +35,10 @@ jobs:
         fi
 
     - name: Post to API with JWT Token
-      shell: sh
+      shell: bash
       run: |
-        RESPONSE=$(curl -X POST -H "Authorization: Bearer ${JWT_TOKEN}" \
+        RESPONSE=$(curl -X POST -H "Authorization: Bearer ${{ env.JWT_TOKEN }}" \
                                 -H "Content-Type: application/json" \
                                 -d '{"message": "Hello from GitHub Actions!"}' \
                                 "https://charming-termite-surely.ngrok-free.app")
         echo "Response from API: $RESPONSE"
-
-      
