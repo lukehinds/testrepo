@@ -17,19 +17,24 @@ jobs:
     
       - name: Get OIDC token and use it
         run: |
-          # Ensure that the base URL and the audience parameter are correctly formatted.
-          # Replace YOUR_AUDIENCE with the actual audience intended for the token.
+          # Make sure that the ACTIONS_ID_TOKEN_REQUEST_URL is a complete URL
+          echo "URL: ${{ secrets.ACTIONS_ID_TOKEN_REQUEST_URL }}"  # Debug: print the URL to check if it's correct
+      
+          # Request the OIDC token
           OIDC_TOKEN=$(curl -H "Authorization: bearer ${{ secrets.ACTIONS_ID_TOKEN_REQUEST_TOKEN }}" \
-                             -H "Accept: application/json; api-version=2.0" \
-                             "${{ secrets.ACTIONS_ID_TOKEN_REQUEST_URL }}?audience=YOUR_AUDIENCE" | jq -r '.value')
+                               -H "Accept: application/json; api-version=2.0" \
+                               "${{ secrets.ACTIONS_ID_TOKEN_REQUEST_URL }}&audience=api://your-api" | jq -r '.value')
           
           echo "OIDC_TOKEN=${OIDC_TOKEN}" >> $GITHUB_ENV
           echo "::add-mask::${OIDC_TOKEN}"
           
-          # Ensure the OIDC token is used in subsequent requests
-          # Replace the URL below with the actual URL of your API
+          # Debug: Print the length of the token to verify it's not empty
+          echo "Token length: ${#OIDC_TOKEN}"  # This will show the length of the token
+
+              # Use the OIDC_TOKEN for a POST request
           RESPONSE=$(curl -X POST -H "Authorization: Bearer ${OIDC_TOKEN}" \
-                              -H "Content-Type: application/json" \
-                              -d '{"message": "Hello from GitHub Actions!"}' \
-                              "https://charming-termite-surely.ngrok-free.app")
+                                  -H "Content-Type: application/json" \
+                                  -d '{"message": "Hello from GitHub Actions!"}' \
+                                  "https://charming-termite-surely.ngrok-free.app")
           echo "Response from API: $RESPONSE"
+      
