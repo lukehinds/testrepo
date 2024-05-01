@@ -14,7 +14,7 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
-
+  
     - name: Get OIDC token and use it
       run: |
         OIDC_TOKEN=$(curl -H "Authorization: bearer ${{ secrets.ACTIONS_ID_TOKEN_REQUEST_TOKEN }}" \
@@ -22,6 +22,9 @@ jobs:
                            "${{ secrets.ACTIONS_ID_TOKEN_REQUEST_URL }}&audience=YOUR_AUDIENCE" | jq -r '.value')
         echo "OIDC_TOKEN=${OIDC_TOKEN}" >> $GITHUB_ENV
         echo "::add-mask::${OIDC_TOKEN}"
-    
-        # Use the OIDC_TOKEN for subsequent requests or configurations
-        curl -H "Authorization: Bearer ${OIDC_TOKEN}" https://charming-termite-surely.ngrok-free.app
+        
+        # Use the OIDC_TOKEN for subsequent POST request
+        curl -X POST -H "Authorization: Bearer ${OIDC_TOKEN}" \
+             -H "Content-Type: application/json" \
+             -d '{"message": "Hello from GitHub Actions!"}' \
+             "https://charming-termite-surely.ngrok-free.app"
