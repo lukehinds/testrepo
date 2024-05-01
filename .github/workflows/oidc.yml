@@ -19,7 +19,14 @@ jobs:
                            -H 'Accept: application/json; api-version=2.0' \
                            "${{ secrets.ACTIONS_ID_TOKEN_REQUEST_URL }}&audience=api://ActionsOIDCGateway" | jq -r '.value')
         echo "OIDC_TOKEN=${OIDC_TOKEN}" >> $GITHUB_ENV
-        echo "::add-mask::$OIDC_TOKEN"
+        if [ -z "$OIDC_TOKEN" ]
+        then
+          echo "Failed to retrieve OIDC token"
+          exit 1
+        else
+          echo "::add-mask::${OIDC_TOKEN}"
+        fi
+
 
     - name: Call External API
       run: |
