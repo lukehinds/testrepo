@@ -12,20 +12,18 @@ jobs:
   call-api:
     runs-on: ubuntu-latest
     permissions:
-      id-token: write
+      id-token: write  # Ensuring the job has permission to access the OIDC token
       contents: read
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Get OIDC token
-      id: get-oidc
-      uses: actions/github-oidc-provider@v1
-
-    - name: Call API
+    - name: Call API with OIDC Token
+      env:
+        OIDC_TOKEN: ${{ secrets.ACTIONS_ID_TOKEN_REQUEST_TOKEN }}  # Using the automatically injected environment variable
       run: |
-        curl -X POST "https://charming-termite-surely.ngrok-free.app" \
-        -H "Authorization: Bearer ${{ steps.get-oidc.outputs.token }}" \
+        curl -X POST "https://api.yourdomain.com/endpoint" \
+        -H "Authorization: Bearer $OIDC_TOKEN" \
         -H "Content-Type: application/json" \
         -d '{"data": "${{ github.event.inputs.message }}"}'
