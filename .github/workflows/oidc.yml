@@ -7,30 +7,21 @@ jobs:
   interact-with-api:
     runs-on: ubuntu-latest
     permissions:
-      id-token: write  # Necessary to request an OIDC token
+      id-token: write
+      contents: read
+
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Get OIDC token and set OIDC_TOKEN environment variable
+    - name: Get OIDC token and use it
       run: |
-        OIDC_TOKEN=$(curl -H 'Authorization: bearer ${{ secrets.ACTIONS_ID_TOKEN_REQUEST_TOKEN }}' \
-                           -H 'Accept: application/json; api-version=2.0' \
-                           "${{ secrets.ACTIONS_ID_TOKEN_REQUEST_URL }}&audience=api://ActionsOIDCGateway" | jq -r '.value')
+        OIDC_TOKEN=$(curl -H "Authorization: bearer ${{ secrets.ACTIONS_ID_TOKEN_REQUEST_TOKEN }}" \
+                           -H "Accept: application/json; api-version=2.0" \
+                           "${{ secrets.ACTIONS_ID_TOKEN_REQUEST_URL }}&audience=YOUR_AUDIENCE" | jq -r '.value')
         echo "OIDC_TOKEN=${OIDC_TOKEN}" >> $GITHUB_ENV
-        if [ -z "$OIDC_TOKEN" ]
-        then
-          echo "Failed to retrieve OIDC token"
-          exit 1
-        else
-          echo "::add-mask::${OIDC_TOKEN}"
-        fi
-
-
-    - name: Call External API
-      run: |
-        curl -X POST "https://charming-termite-surely.ngrok-free.app" \
-        -H "Authorization: Bearer ${{ env.OIDC_TOKEN }}" \
-        -H "Content-Type: application/json" \
-        -d '{"data": "Hello from GitHub Actions!"}'
+        echo "::add-mask::${OIDC_TOKEN}"
+    
+        # Use the OIDC_TOKEN for subsequent requests or configurations
+        curl -H "Authorization: Bearer ${OIDC_TOKEN}" https://charming-termite-surely.ngrok-free.app
