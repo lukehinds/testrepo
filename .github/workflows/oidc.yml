@@ -1,29 +1,26 @@
-name: Manual API Caller
+name: API Call with OIDC Authentication
 
 on:
-  workflow_dispatch:
-    inputs:
-      message:
-        description: 'Data to send'
-        required: true
-        default: 'Hello from GitHub Actions!'
+  workflow_dispatch:  # Enables manual trigger from GitHub UI
 
 jobs:
   call-api:
     runs-on: ubuntu-latest
     permissions:
-      id-token: write  # Ensuring the job has permission to access the OIDC token
       contents: read
+      id-token: write  # Necessary to request an OIDC token
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Call API with OIDC Token
-      env:
-        OIDC_TOKEN: ${{ secrets.ACTIONS_ID_TOKEN_REQUEST_TOKEN }}  # Using the automatically injected environment variable
+    - name: Obtain OIDC Token
+      id: get_oidc
+      uses: actions/oidc-client@v1  # Official action to obtain OIDC token
+
+    - name: Call External API
       run: |
         curl -X POST "https://charming-termite-surely.ngrok-free.app" \
-        -H "Authorization: Bearer $OIDC_TOKEN" \
+        -H "Authorization: Bearer ${{ steps.get_oidc.outputs.token }}" \
         -H "Content-Type: application/json" \
-        -d '{"data": "${{ github.event.inputs.message }}"}'
+        -d '{"data": "Hello from GitHub Actions!"}'
