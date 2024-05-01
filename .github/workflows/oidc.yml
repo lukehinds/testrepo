@@ -1,0 +1,31 @@
+name: Manual API Caller
+
+on:
+  workflow_dispatch:
+    inputs:
+      message:
+        description: 'Data to send'
+        required: true
+        default: 'Hello from GitHub Actions!'
+
+jobs:
+  call-api:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Get OIDC token
+      id: get-oidc
+      uses: actions/github-oidc-provider@v1
+
+    - name: Call API
+      run: |
+        curl -X POST "https://charming-termite-surely.ngrok-free.app" \
+        -H "Authorization: Bearer ${{ steps.get-oidc.outputs.token }}" \
+        -H "Content-Type: application/json" \
+        -d '{"data": "${{ github.event.inputs.message }}"}'
