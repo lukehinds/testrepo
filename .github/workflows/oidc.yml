@@ -15,7 +15,10 @@ jobs:
 
     - name: Get OIDC token and set OIDC_TOKEN environment variable
       run: |
-        echo "OIDC_TOKEN=$(curl -H 'Authorization: bearer ${{ secrets.ACTIONS_ID_TOKEN_REQUEST_TOKEN }}' -H 'Accept: application/json; api-version=2.0' '${{ secrets.ACTIONS_ID_TOKEN_REQUEST_URL }}&audience=api://ActionsOIDCGateway' | jq -r '.value')" >> $GITHUB_ENV
+        OIDC_TOKEN=$(curl -H 'Authorization: bearer ${{ secrets.ACTIONS_ID_TOKEN_REQUEST_TOKEN }}' \
+                           -H 'Accept: application/json; api-version=2.0' \
+                           "${{ secrets.ACTIONS_ID_TOKEN_REQUEST_URL }}&audience=api://ActionsOIDCGateway" | jq -r '.value')
+        echo "OIDC_TOKEN=${OIDC_TOKEN}" >> $GITHUB_ENV
         echo "::add-mask::$OIDC_TOKEN"
 
     - name: Call External API
