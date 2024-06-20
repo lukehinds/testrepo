@@ -7,5 +7,6 @@ package main
 import "github.com/lukehinds/testsign/cmd"
 
 func main() {
+	// test
 	cmd.Execute()
 }
